@@ -1,0 +1,56 @@
+version: '3.8'
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+services:
+  vcsim:
+    image: vmware/vcsim:latest
+    hostname: vcsim
+    restart: always
+    ports:
+      - 8989:8989
+
+  grafana-agent:
+    image: grafana/agent:latest
+    container_name: grafana-agent
+    restart: unless-stopped
+    volumes:
+      - ./grafana-agent/agent.yaml:/etc/agent.yaml
+    command: 
+      - "--config.file=/etc/agent.yaml"
+      - "-enable-features=integrations-next"
+    ports:
+      - 12345:12345
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
+      - "--web.enable-remote-write-receiver"
+    ports:
+      - 9090:9090
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+    ports:
+      - 3000:3000

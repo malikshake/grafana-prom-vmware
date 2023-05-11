@@ -1,0 +1,23 @@
+integrations:
+  vsphere_configs:
+    - vsphere_url: https://vcsim:8989/sdk
+      vsphere_user: user
+      vsphere_password: pass
+      request_chunk_size: 256
+      collect_concurrency: 8
+      instance: vsphere
+      autoscrape:
+        enable: true
+        metrics_instance: default
+
+metrics:
+  wal_directory: /tmp/wal
+  global:
+    scrape_interval: 15s
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+  configs:
+    - name: default
+
+server:
+  log_level: debug
